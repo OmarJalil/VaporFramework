@@ -1,0 +1,23 @@
+//
+//  CreateAcronym.swift
+//  
+//
+//  Created by Jalil Fierro on 01/07/22.
+//
+
+import Foundation
+import Fluent
+
+struct CreateAcronym: Migration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Acronym.schema)
+            .id()
+            .field("short", .string, .required)
+            .field("long", .string, .required)
+            .create()
+    }
+
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(Acronym.schema).delete()
+    }
+}

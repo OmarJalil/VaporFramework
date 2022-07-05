@@ -1,5 +1,5 @@
 //
-//  CreateUser.swift
+//  CreateCategory.swift
 //  
 //
 //  Created by Jalil Fierro on 05/07/22.
@@ -7,16 +7,15 @@
 
 import Fluent
 
-struct CreateUser: Migration {
+struct CreateCategory: Migration {
     func prepare(on database: Database) -> EventLoopFuture<Void> {
-        database.schema(User.schema)
+        database.schema(Category.schema)
             .id()
             .field("name", .string, .required)
-            .field("username", .string, .required)
             .create()
     }
 
     func revert(on database: Database) -> EventLoopFuture<Void> {
-        database.schema(User.schema).delete()
+        database.schema(Category.schema).delete()
     }
 }

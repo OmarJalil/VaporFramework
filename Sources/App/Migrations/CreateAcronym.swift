@@ -5,7 +5,6 @@
 //  Created by Jalil Fierro on 01/07/22.
 //
 
-import Foundation
 import Fluent
 
 struct CreateAcronym: Migration {

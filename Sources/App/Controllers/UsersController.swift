@@ -16,6 +16,7 @@ struct UsersController: RouteCollection {
         usersRoutes.get(":userId", use: getHandler)
         usersRoutes.delete(":userId", use: deleteHandler)
         usersRoutes.put(":userId", use: updateHandler)
+        usersRoutes.get(":userId", "acronyms", use: getAcronymsHandler)
     }
 
     func getAllHandler(_ req: Request) throws -> EventLoopFuture<[User]> {
@@ -48,6 +49,13 @@ struct UsersController: RouteCollection {
                 return user.save(on: req.db).map {
                     user
                 }
+            }
+    }
+
+    func getAcronymsHandler(_ req: Request) throws -> EventLoopFuture<[Acronym]> {
+        User.find(req.parameters.get("userId"), on: req.db)
+            .unwrap(or: Abort(.notFound)).flatMap { user in
+                user.$acronyms.get(on: req.db)
             }
     }
 }

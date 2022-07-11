@@ -37,29 +37,30 @@ struct UsersController: RouteCollection {
 
     func deleteHandler(_ req: Request) async throws -> HTTPStatus {
         guard let user = try await User.find(req.parameters.get("userId"), on: req.db) else {
-            Abort(.notFound)
+            throw Abort(.notFound)
         }
 
-        user.delete(on: req.db)
+        try await user.delete(on: req.db)
         return .noContent
     }
 
-    func updateHandler(_ req: Request) throws -> EventLoopFuture<User> {
+    func updateHandler(_ req: Request) async throws -> User {
         let updatedUser = try req.content.decode(User.self)
-        return User.find(req.parameters.get("userId"), on: req.db)
-            .unwrap(or: Abort(.notFound)).flatMap { user in
-                user.name = updatedUser.name
-                user.username = updatedUser.username
-                return user.save(on: req.db).map {
-                    user
-                }
-            }
+
+        guard let user = try await User.find(req.parameters.get("userId"), on: req.db) else {
+            throw Abort(.notFound)
+        }
+
+        user.name = updatedUser.name
+        user.username = updatedUser.username
+        try await user.save(on: req.db)
+        return user
     }
 
-    func getAcronymsHandler(_ req: Request) throws -> EventLoopFuture<[Acronym]> {
-        User.find(req.parameters.get("userId"), on: req.db)
-            .unwrap(or: Abort(.notFound)).flatMap { user in
-                user.$acronyms.get(on: req.db)
-            }
+    func getAcronymsHandler(_ req: Request) async throws -> [Acronym] {
+        guard let user = try await User.find(req.parameters.get("userId"), on: req.db) else {
+            throw Abort(.notFound)
+        }
+        return try await user.$acronyms.get(on: req.db)
     }
 }

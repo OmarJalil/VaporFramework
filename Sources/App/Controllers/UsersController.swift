@@ -19,8 +19,8 @@ struct UsersController: RouteCollection {
         usersRoutes.get(":userId", "acronyms", use: getAcronymsHandler)
     }
 
-    func getAllHandler(_ req: Request) throws -> EventLoopFuture<[User]> {
-        User.query(on: req.db).all()
+    func getAllHandler(_ req: Request) async throws -> [User] {
+        return try await User.query(on: req.db).all()
     }
 
     func createHandler(_ req: Request) throws -> EventLoopFuture<User> {
@@ -28,16 +28,20 @@ struct UsersController: RouteCollection {
         return user.save(on: req.db).map { user }
     }
 
-    func getHandler(_ req: Request) throws -> EventLoopFuture<User> {
-        User.find(req.parameters.get("userId"), on: req.db)
-            .unwrap(or: Abort(.notFound))
+    func getHandler(_ req: Request) async throws -> User {
+        guard let user = try await User.find(req.parameters.get("userId"), on: req.db) else {
+            throw Abort(.notFound)
+        }
+        return user
     }
 
-    func deleteHandler(_ req: Request) throws -> EventLoopFuture<HTTPStatus> {
-        User.find(req.parameters.get("userId"), on: req.db)
-            .unwrap(or: Abort(.notFound)).flatMap { user in
-                user.delete(on: req.db).transform(to: .noContent)
-            }
+    func deleteHandler(_ req: Request) async throws -> HTTPStatus {
+        guard let user = try await User.find(req.parameters.get("userId"), on: req.db) else {
+            Abort(.notFound)
+        }
+
+        user.delete(on: req.db)
+        return .noContent
     }
 
     func updateHandler(_ req: Request) throws -> EventLoopFuture<User> {
